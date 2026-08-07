@@ -1,3 +1,22 @@
+# The real input file. This is the whole privacy design of this project in one line.
+#
+# people.json holds names, dates of birth, diagnoses and medication lists for real people, very
+# often children. It is ignored before it exists, so that the first time somebody copies
+# people.example.json across and fills it in, git already refuses to stage it. Adding the rule
+# after the fact does not help: by then the record is in the history.
+#
+# people.example.json is committed and holds invented people only. scripts/privacy_scan.py
+# fails if this rule is missing, if git check-ignore disagrees with it, if people.json is
+# tracked anyway, or if anybody in the example file stops being visibly fictional.
+people.json
+people.*.json
+!people.example.json
+
+# Generated output. Cards built from a real people.json are just as sensitive as the input.
+dist/
+build/
+docs/*.png
+
 .env
 .env.*
 !.env.example
@@ -9,6 +28,4 @@ node_modules/
 __pycache__/
 *.pyc
 .venv/
-dist/
-build/
 .next/
