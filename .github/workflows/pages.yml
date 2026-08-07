@@ -27,7 +27,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # 22 or newer. `node --test 'test/*.test.js'` passes the glob to node, and node only
+          # expands it from 22 on. Under 20 it is read as a literal path, node reports it cannot
+          # find the file, and CI fails while the same command passes locally on 24.
+          node-version: '22'
 
       # The published page shows real rendered cards, so the one thing that must be true of it
       # is that it was built from the committed fictional example and from nothing else. This

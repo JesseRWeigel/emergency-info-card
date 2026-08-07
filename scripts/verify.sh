@@ -187,6 +187,14 @@ step_tree_untouched() {
 
 # ------------------------------------------------------------------------------------------
 step_unit() {
+  # node only expands a glob passed to --test from version 22 on. Under 20 it reads the pattern
+  # as a literal path and reports it cannot find the file, which is how CI failed here while this
+  # same line passed locally. Check the version rather than discover the skew in a deploy log.
+  node_major="$(node -p 'process.versions.node.split(".")[0]')"
+  if [ "$node_major" -lt 22 ]; then
+    echo "  node $node_major cannot expand the glob passed to --test; 22 or newer is required"
+    return 1
+  fi
   node --test 'test/*.test.js'
 }
 
