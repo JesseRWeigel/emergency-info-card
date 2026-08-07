@@ -10,7 +10,7 @@
   "scripts": {
     "build": "node bin/emcard.js build",
     "check": "node bin/emcard.js check",
-    "test": "node --test test/*.test.js",
+    "test": "node --test 'test/*.test.js'",
     "verify": "bash scripts/verify.sh"
   }
 }
