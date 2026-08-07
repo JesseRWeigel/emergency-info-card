@@ -1,0 +1,151 @@
+{
+  "_comment": [
+    "Every person in this file is invented. The surnames are all obviously made up, every",
+    "phone number is inside the 555-0100 to 555-0199 block that North American telephone",
+    "administration reserves for fiction, and scripts/privacy_scan.py fails the build if",
+    "either of those stops being true. Nothing here describes a real person, and nothing",
+    "real is ever supposed to be committed to this repository.",
+    "",
+    "Copy this file to people.json, which .gitignore already excludes, and edit that.",
+    "",
+    "The four records are chosen to exercise four different shapes of the layout problem:",
+    "one that fits on a single card, one that does not fit and has to paginate, one that is",
+    "almost empty, and one whose single note is longer than an entire card side."
+  ],
+  "people": [
+    {
+      "id": "wren",
+      "name": "Wren Fictitious-Example",
+      "dateOfBirth": "1988-04-12",
+      "bloodType": "O+",
+      "pronouns": "she/her",
+      "language": "English",
+      "allergies": [
+        { "what": "Penicillin", "reaction": "anaphylaxis", "severity": "life-threatening" },
+        { "what": "Latex", "reaction": "contact rash", "severity": "moderate" }
+      ],
+      "conditions": [
+        { "what": "Type 1 diabetes", "detail": "insulin pump, left abdomen" }
+      ],
+      "medications": [
+        { "what": "Insulin aspart", "dose": "via pump" },
+        { "what": "Levothyroxine", "dose": "75 mcg each morning" }
+      ],
+      "contacts": [
+        { "name": "Robin Fictitious-Example", "relationship": "spouse", "phone": "+1 555-0142" },
+        { "name": "Dr Imaginary Clinic", "relationship": "GP", "phone": "+1 555-0177" }
+      ],
+      "notes": [
+        "Insulin pump on left abdomen, do not remove"
+      ]
+    },
+    {
+      "id": "bartholomew",
+      "name": "Bartholomew Nonexistent-Fabrication",
+      "dateOfBirth": "1951-11-03",
+      "bloodType": "AB-",
+      "pronouns": "he/him",
+      "language": "English and Portuguese",
+      "allergies": [
+        { "what": "Sulfa drugs", "reaction": "Stevens-Johnson syndrome", "severity": "life-threatening" },
+        { "what": "Codeine", "reaction": "respiratory depression", "severity": "severe" },
+        { "what": "Shellfish", "reaction": "anaphylaxis", "severity": "life-threatening" },
+        { "what": "Adhesive dressings", "reaction": "skin tearing", "severity": "mild" },
+        { "what": "Iodinated contrast", "reaction": "hives and wheeze", "severity": "severe" }
+      ],
+      "conditions": [
+        { "what": "Atrial fibrillation", "detail": "rate controlled" },
+        { "what": "Chronic kidney disease", "detail": "stage 3b, avoid NSAIDs" },
+        { "what": "Type 2 diabetes" },
+        { "what": "Implanted pacemaker", "detail": "dual chamber, fitted 2019" }
+      ],
+      "medications": [
+        { "what": "Apixaban", "dose": "2.5 mg twice daily" },
+        { "what": "Bisoprolol", "dose": "5 mg daily" },
+        { "what": "Metformin", "dose": "500 mg twice daily" },
+        { "what": "Atorvastatin", "dose": "40 mg at night" },
+        { "what": "Ramipril", "dose": "2.5 mg daily" },
+        { "what": "Furosemide", "dose": "20 mg each morning" },
+        { "what": "Lansoprazole", "dose": "30 mg daily" },
+        { "what": "Tamsulosin", "dose": "400 mcg daily" },
+        { "what": "Colecalciferol", "dose": "800 units daily" },
+        { "what": "Gabapentin", "dose": "300 mg three times daily" },
+        { "what": "Salbutamol inhaler", "dose": "as needed" }
+      ],
+      "contacts": [
+        { "name": "Perpetua Nonexistent-Fabrication", "relationship": "daughter", "phone": "+1 555-0118" },
+        { "name": "Cornelius Nonexistent", "relationship": "son", "phone": "+1 555-0163" },
+        { "name": "Riverbend Invented Cardiology", "relationship": "cardiology clinic", "phone": "+1 555-0104" }
+      ],
+      "notes": [
+        "Anticoagulated. Bleeding risk is high after any fall.",
+        "Pacemaker card is in the same wallet pocket as this card.",
+        "Hard of hearing on the right side."
+      ]
+    },
+    {
+      "id": "kip",
+      "name": "Kip Notareal",
+      "dateOfBirth": "2001-07-30",
+      "allergies": [
+        { "what": "Bee stings", "reaction": "anaphylaxis", "severity": "life-threatening" }
+      ],
+      "contacts": [
+        { "name": "Sunny Notareal", "relationship": "parent", "phone": "+1 555-0155" }
+      ],
+      "notes": [
+        "Carries an adrenaline auto-injector in the left jacket pocket."
+      ]
+    },
+    {
+      "id": "juniper",
+      "name": "Juniper Madeup",
+      "dateOfBirth": "2017-02-09",
+      "bloodType": "A+",
+      "pronouns": "they/them",
+      "language": "English",
+      "allergies": [
+        { "what": "Peanuts", "reaction": "anaphylaxis", "severity": "life-threatening" },
+        { "what": "Tree nuts", "reaction": "anaphylaxis", "severity": "life-threatening" },
+        { "what": "Amoxicillin", "reaction": "rash", "severity": "mild" }
+      ],
+      "conditions": [
+        { "what": "Asthma", "detail": "moderate, worse with exercise" }
+      ],
+      "medications": [
+        { "what": "Adrenaline auto-injector", "dose": "0.15 mg, in the school bag" },
+        { "what": "Beclometasone inhaler", "dose": "two puffs morning and night" }
+      ],
+      "contacts": [
+        { "name": "Wren Fictitious-Example", "relationship": "parent", "phone": "+1 555-0142" },
+        { "name": "Hollow Oak Imaginary School", "relationship": "school office", "phone": "+1 555-0126" }
+      ],
+      "notes": [
+        "Weight 24 kg as of the last check, for weight based dosing.",
+        "Will say they feel fine while a reaction is starting. Do not wait."
+      ]
+    },
+    {
+      "id": "marguerite",
+      "name": "Marguerite Imaginary-Placeholder",
+      "dateOfBirth": "1943-06-21",
+      "bloodType": "B+",
+      "pronouns": "she/her",
+      "allergies": [
+        { "what": "Morphine", "reaction": "severe nausea and confusion", "severity": "moderate" }
+      ],
+      "conditions": [
+        { "what": "Advanced heart failure", "detail": "NYHA class III" }
+      ],
+      "medications": [
+        { "what": "Sacubitril valsartan", "dose": "49/51 mg twice daily" }
+      ],
+      "contacts": [
+        { "name": "Ptolemy Imaginary-Placeholder", "relationship": "son and health proxy", "phone": "+1 555-0109" }
+      ],
+      "notes": [
+        "Advance directive summary. A signed advance directive is held by the named health proxy and a copy is filed with the invented family practice at the telephone number above. Its short form is that she declines cardiopulmonary resuscitation and declines intubation and mechanical ventilation, and that she accepts oxygen, antibiotics, fluids and any treatment intended to relieve breathlessness or pain even where that treatment may shorten life. She asks to be taken to hospital only where the hospital can offer comfort that cannot be given at home. This paragraph is a summary written for a wallet and it is not the directive itself, so treat the signed document as the authority and telephone the proxy before acting on anything written here."
+      ]
+    }
+  ]
+}

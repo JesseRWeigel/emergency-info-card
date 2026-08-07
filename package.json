@@ -1,0 +1,16 @@
+{
+  "name": "emergency-info-card",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Wallet card and lock-screen image with the facts a first responder needs, generated locally from one file",
+  "type": "module",
+  "bin": { "emcard": "./bin/emcard.js" },
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "build": "node bin/emcard.js build",
+    "check": "node bin/emcard.js check",
+    "test": "node --test test/*.test.js",
+    "verify": "bash scripts/verify.sh"
+  }
+}
