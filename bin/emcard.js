@@ -232,6 +232,7 @@ function measureChromeChrome(chrome, execFileSync, os, fs2, path2) {
     const dom = execFileSync(chrome, [
       ...OFFLINE_FLAGS,
       `--user-data-dir=${path2.join(dir, 'profile')}`,
+      '--hide-scrollbars',
       '--window-size=800,900',
       '--virtual-time-budget=4000',
       '--dump-dom',
@@ -259,38 +260,61 @@ async function cmdShoot(args) {
   const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
   const byId = new Map(DEVICES.map((d) => [d.id, d]));
 
+  const overhead = measureChromeChrome(chrome, execFileSync, os, fs, path);
+  process.stdout.write(`browser furniture: ${overhead.widthOverhead} x `
+    + `${overhead.heightOverhead} CSS px of window that is not viewport\n`);
+
   let count = 0;
   for (const person of report.people) {
     for (const lock of person.lockScreens) {
       const device = byId.get(lock.device);
       const source = path.join(outDir, person.id, `lock-${device.id}.html`);
       const target = path.join(outDir, person.id, `lock-${device.id}.png`);
+      // Ask for a window big enough that the VIEWPORT is the device, then cut the furniture
+      // back off the captured image. Asking for a device-sized window instead produces a PNG of
+      // exactly the right dimensions whose last `heightOverhead * dpr` rows were never painted,
+      // and on a 780 px Android screen that is the bottom of the card.
+      const shotW = device.cssWidth + overhead.widthOverhead;
+      const shotH = device.cssHeight + overhead.heightOverhead;
+      const raw = path.join(outDir, person.id, `lock-${device.id}.raw.png`);
       const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'emcard-chrome-'));
       try {
         execFileSync(chrome, [
           ...OFFLINE_FLAGS,
           `--user-data-dir=${profile}`,
           `--force-device-scale-factor=${device.dpr}`,
-          `--window-size=${device.cssWidth},${device.cssHeight}`,
+          `--window-size=${shotW},${shotH}`,
           '--hide-scrollbars',
           '--virtual-time-budget=6000',
-          `--screenshot=${target}`,
+          `--screenshot=${raw}`,
           `file://${source}`
         ], { timeout: 120_000, stdio: ['ignore', 'ignore', 'ignore'] });
       } finally {
         fs.rmSync(profile, { recursive: true, force: true });
       }
-      if (!fs.existsSync(target)) {
-        throw new Error(`Chrome did not produce ${path.relative(process.cwd(), target)}`);
+      if (!fs.existsSync(raw)) {
+        throw new Error(`Chrome did not produce ${path.relative(process.cwd(), raw)}`);
       }
-      const size = readPngSize(fs.readFileSync(target));
+      const rawBytes = fs.readFileSync(raw);
+      const rawSize = readPngSize(rawBytes);
+      if (rawSize.width !== shotW * device.dpr || rawSize.height !== shotH * device.dpr) {
+        fs.rmSync(raw, { force: true });
+        throw new Error(`${device.id}: asked Chrome for a ${shotW}x${shotH} window at scale `
+          + `${device.dpr} and got a ${rawSize.width}x${rawSize.height} PNG rather than `
+          + `${shotW * device.dpr}x${shotH * device.dpr}. The window size and the captured size `
+          + 'disagree, which is the exact trap that makes a screenshot an unreliable measurement.');
+      }
       const want = { w: device.cssWidth * device.dpr, h: device.cssHeight * device.dpr };
+      fs.writeFileSync(target, encodePng(cropPng(decodePng(rawBytes), want.w, want.h)));
+      fs.rmSync(raw, { force: true });
+
+      const size = readPngSize(fs.readFileSync(target));
       if (size.width !== want.w || size.height !== want.h) {
-        throw new Error(`${device.id}: the PNG is ${size.width}x${size.height} but the device is `
-          + `${want.w}x${want.h}. The window size and the captured size disagree, which is the `
-          + 'exact trap that makes a screenshot an unreliable measurement.');
+        throw new Error(`${device.id}: the cropped PNG is ${size.width}x${size.height} but the `
+          + `device is ${want.w}x${want.h}`);
       }
-      process.stdout.write(`  ${person.id} ${device.id} ${size.width}x${size.height}\n`);
+      process.stdout.write(`  ${person.id} ${device.id} ${size.width}x${size.height}`
+        + ` (cropped from ${rawSize.width}x${rawSize.height})\n`);
       count += 1;
     }
   }
