@@ -3,8 +3,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { wrapText, layoutPerson, CONTENT_WIDTH_MM, CONTENT_HEIGHT_MM, SPLIT_MARKER }
-  from '../src/layout.js';
+import { wrapText, layoutPerson, assertSidesFit, assertComplete, placedAtomIds,
+  CONTENT_WIDTH_MM, CONTENT_HEIGHT_MM, SPLIT_MARKER } from '../src/layout.js';
 import { advanceMm } from '../src/metrics.js';
 import { CARD, TYPE, LEGIBILITY } from '../src/design.js';
 import { normalizePerson } from '../src/schema.js';
@@ -215,6 +215,70 @@ test('a name too long for two lines grows the header rather than shrinking below
   const rejoined = laid.header.nameLines.join(' ').replace(/\s+/g, ' ');
   assert.ok(rejoined.includes('Wilhelmina'), 'the name is not truncated');
   assert.ok(rejoined.endsWith('Placeholder'), `the end of the name survived: ${rejoined}`);
+});
+
+// ------------------------------------------------------------------------------------------
+// The two guards, fired directly.
+//
+// These exist because the sabotage harness deleted both of them, no output changed, and no test
+// noticed. A guard that only fires when the surrounding code is already broken cannot be tested
+// where it sits, so both take plain data and are handed a broken layout here on purpose.
+// ------------------------------------------------------------------------------------------
+test('assertSidesFit throws on a side that overflows its content box', () => {
+  const ok = [{ index: 0, usedMm: 40, capacityMm: 40, blocks: [] }];
+  assert.doesNotThrow(() => assertSidesFit(ok, 'subject'));
+
+  const over = [{ index: 0, usedMm: 41.5, capacityMm: 40, blocks: [] }];
+  assert.throws(() => assertSidesFit(over, 'subject'), (err) => {
+    assert.match(err.message, /clipped/);
+    assert.match(err.message, /41\.50 mm/);
+    return true;
+  });
+
+  // Floating point noise is not an overflow. A tolerance that was zero would make this throw
+  // on a card that fits exactly, and the fix somebody would reach for is to delete the check.
+  assert.doesNotThrow(() => assertSidesFit(
+    [{ index: 0, usedMm: 40 + 1e-9, capacityMm: 40, blocks: [] }], 'subject'));
+});
+
+test('assertComplete throws on a lost, repeated or invented fact', () => {
+  const want = ['s/medications/0', 's/medications/1', 's/contacts/0'];
+  assert.doesNotThrow(() => assertComplete([...want], want, 's'));
+  // Order is not part of the invariant. The same facts in a different order is the same set.
+  assert.doesNotThrow(() => assertComplete([...want].reverse(), want, 's'));
+
+  // Lost. This is the eleventh medication, stated as the smallest possible case.
+  assert.throws(() => assertComplete(want.slice(0, 2), want, 's'), (err) => {
+    assert.match(err.message, /Missing: s\/contacts\/0/);
+    return true;
+  });
+  // Repeated.
+  assert.throws(() => assertComplete([...want, want[0]], want, 's'), /Duplicated: s\/medications\/0/);
+  // Invented.
+  assert.throws(() => assertComplete([...want, 's/medications/9'], want, 's'),
+    /Unexpected: s\/medications\/9/);
+});
+
+test('placedAtomIds counts a split atom once, at its first part', () => {
+  const atom = { id: 's/notes/0' };
+  const sides = [
+    { blocks: [{ atoms: [{ atom, part: { index: 0, first: true, last: false } }] }] },
+    { blocks: [{ atoms: [{ atom, part: { index: 1, first: false, last: true } }] }] }
+  ];
+  assert.deepEqual(placedAtomIds(sides), ['s/notes/0']);
+  assert.deepEqual(placedAtomIds([{ blocks: [{ atoms: [{ atom, part: null }] }] }]),
+    ['s/notes/0']);
+});
+
+test('layoutPerson runs both guards on its own output', () => {
+  // The guards are wired in, not merely exported. A real layout passes both when they are
+  // applied to what it returned.
+  const laid = layoutPerson(person({
+    medications: Array.from({ length: 9 }, (_, i) => ({ what: `Drug ${i}`, dose: '10 mg' }))
+  }));
+  assert.doesNotThrow(() => assertSidesFit(laid.sides, 'subject'));
+  assert.doesNotThrow(() => assertComplete(placedAtomIds(laid.sides),
+    laid.person.atoms.map((a) => a.id), 'subject'));
 });
 
 test('the type scale has no size below the legibility floor', () => {

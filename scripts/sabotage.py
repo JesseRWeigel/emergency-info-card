@@ -150,8 +150,8 @@ SABOTAGES = [
     Sabotage(
         "completeness-invariant-removed",
         "src/layout.js",
-        "  if (missing.length > 0 || duplicated.length > 0) {",
-        "  if (false && (missing.length > 0 || duplicated.length > 0)) {",
+        "  if (missing.length > 0 || duplicated.length > 0 || unexpected.length > 0) {",
+        "  if (false) {",
         "the completeness invariant that refuses to return a layout that lost a fact",
         ["unit"],
         expect_output_change=False,
@@ -164,6 +164,14 @@ SABOTAGES = [
         "the per-side overflow assertion, so a clipped card returns successfully",
         ["unit"],
         expect_output_change=False,
+    ),
+    Sabotage(
+        "split-atom-counted-twice",
+        "src/layout.js",
+        "        if (entry.part === null || entry.part.first) ids.push(entry.atom.id);",
+        "        ids.push(entry.atom.id);",
+        "the rule that a split fact is one fact, so completeness miscounts it as two",
+        ["build", "unit"],
     ),
     Sabotage(
         "advance-width-understated",

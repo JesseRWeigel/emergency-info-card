@@ -190,6 +190,66 @@ function titleHeightMm(section) {
 }
 
 /**
+ * The atom ids a laid-out set of sides actually carries.
+ *
+ * A split atom is rendered once per part and counted once, at its first part, because it is
+ * still one fact.
+ */
+export function placedAtomIds(sides) {
+  const ids = [];
+  for (const side of sides) {
+    for (const block of side.blocks) {
+      for (const entry of block.atoms) {
+        if (entry.part === null || entry.part.first) ids.push(entry.atom.id);
+      }
+    }
+  }
+  return ids;
+}
+
+/**
+ * Every side must fit its content box.
+ *
+ * An assertion rather than a warning: a side that does not fit is a clipped card, and a clipped
+ * card is the failure this whole file exists to prevent.
+ *
+ * Exported and taking plain data rather than living inline in layoutPerson, because a guard
+ * that only fires when the surrounding code is already broken cannot be tested where it sits.
+ * The sabotage harness found exactly that: deleting this check changed no output and no test
+ * noticed, which makes it a comment rather than a guard. Now test/layout.test.js hands it a
+ * side that overflows and requires it to throw.
+ */
+export function assertSidesFit(sides, personId) {
+  for (const s of sides) {
+    if (s.usedMm > s.capacityMm + 1e-6) {
+      throw new Error(
+        `${personId}: side ${s.index + 1} needs ${s.usedMm.toFixed(2)} mm of a `
+        + `${s.capacityMm.toFixed(2)} mm content box. The paginator failed to break, which `
+        + 'means content would be clipped.');
+    }
+  }
+}
+
+/**
+ * Placed atom ids, counted, against input atom ids, counted.
+ *
+ * Exported for the same reason as assertSidesFit: this is the check that catches a silently
+ * dropped eleventh medication, so it is the last thing that may go untested.
+ */
+export function assertComplete(placedIds, inputIds, personId) {
+  const missing = inputIds.filter((id) => !placedIds.includes(id));
+  const duplicated = placedIds.filter((id, i) => placedIds.indexOf(id) !== i);
+  const unexpected = placedIds.filter((id) => !inputIds.includes(id));
+  if (missing.length > 0 || duplicated.length > 0 || unexpected.length > 0) {
+    throw new Error(
+      `${personId}: the layout lost or repeated content. Missing: `
+      + `${missing.join(', ') || 'none'}. Duplicated: ${duplicated.join(', ') || 'none'}. `
+      + `Unexpected: ${unexpected.join(', ') || 'none'}. `
+      + 'Nothing is allowed to fall off a card.');
+  }
+}
+
+/**
  * Lay one person out onto sides.
  *
  * Returns { sides, cards, report }. Throws if the completeness invariant fails, because a
@@ -376,36 +436,8 @@ export function layoutPerson(person) {
     };
   });
 
-  // Every side must fit its content box. This is an assertion rather than a warning: a side
-  // that does not fit is a clipped card, and a clipped card is the failure this whole file is
-  // built to prevent.
-  for (const s of laid) {
-    if (s.usedMm > s.capacityMm + 1e-6) {
-      throw new Error(
-        `${person.id}: side ${s.index + 1} needs ${s.usedMm.toFixed(2)} mm of a `
-        + `${s.capacityMm.toFixed(2)} mm content box. The paginator failed to break, which `
-        + 'means content would be clipped.');
-    }
-  }
-
-  // Completeness. Placed atom ids, counted, against input atom ids, counted.
-  const placedIds = [];
-  for (const s of laid) {
-    for (const block of s.blocks) {
-      for (const entry of block.atoms) {
-        if (entry.part === null || entry.part.first) placedIds.push(entry.atom.id);
-      }
-    }
-  }
-  const inputIds = person.atoms.map((a) => a.id);
-  const missing = inputIds.filter((id) => !placedIds.includes(id));
-  const duplicated = placedIds.filter((id, i) => placedIds.indexOf(id) !== i);
-  if (missing.length > 0 || duplicated.length > 0) {
-    throw new Error(
-      `${person.id}: the layout lost or repeated content. Missing: `
-      + `${missing.join(', ') || 'none'}. Duplicated: ${duplicated.join(', ') || 'none'}. `
-      + 'Nothing is allowed to fall off a card.');
-  }
+  assertSidesFit(laid, person.id);
+  assertComplete(placedAtomIds(laid), person.atoms.map((a) => a.id), person.id);
 
   return {
     person,
