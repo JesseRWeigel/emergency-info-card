@@ -623,6 +623,16 @@ def check_cards(dist, report, fonts, expected_atoms):
                 check(text == model["text"],
                       "%s %s: the HTML says %r, the report says %r"
                       % (pid, run_id, text[:40], model["text"][:40]))
+                # The tool's own contrast number, against this file's independent one. A floor
+                # check alone cannot catch an arithmetic error that moves every ratio in the
+                # same direction, because the shipped palette clears the floor with room to
+                # spare. Comparing the two numbers can.
+                if model.get("contrast") is not None:
+                    check(abs(ratio - model["contrast"]) <= 0.005,
+                          "%s %s: the sRGB formula here gives %.4f:1 and the tool reports "
+                          "%.4f:1 for the same colour pair. One of the two implementations of "
+                          "the WCAG relative-luminance formula is wrong."
+                          % (pid, run_id, ratio, model["contrast"]))
                 check(abs(width_mm - model["predictedWidthMm"]) <= 0.01,
                       "%s %s: the font file puts this line at %.4f mm, the tool's table says "
                       "%.4f mm. The baked advance-width table does not describe this font."
@@ -646,6 +656,28 @@ def check_lock_screens(dist, report, fonts):
                 continue
             collector = RunCollector()
             collector.feed(path.read_text(encoding="utf-8"))
+
+            # Where the panel sits, judged against this file's own belief about phone furniture
+            # rather than against the reserve fractions the tool configured. A clock occupies
+            # roughly the top quarter of a stock lock screen on every phone in the device list,
+            # and the shortcut row roughly the bottom tenth. Text placed inside either is text
+            # nobody reads, so the reserve is bounded here independently of src/design.js. A
+            # reserve edited down to nothing fails this without a browser being involved.
+            height = lock["cssHeight"]
+            top_fraction = lock["safeTopPx"] / height
+            bottom_fraction = (height - lock["safeBottomPx"]) / height
+            check(top_fraction >= 0.25,
+                  "%s %s: the panel starts %.1f%% down the screen. The clock and date on a "
+                  "stock lock screen run to about a quarter of the height, so anything above "
+                  "that is behind the clock."
+                  % (pid, lock["device"], top_fraction * 100))
+            check(bottom_fraction >= 0.08,
+                  "%s %s: the panel ends %.1f%% from the bottom. The torch and camera "
+                  "shortcuts and the home indicator need about a tenth."
+                  % (pid, lock["device"], bottom_fraction * 100))
+            check(lock["safeLeftPx"] > 0 and lock["safeRightPx"] < lock["cssWidth"],
+                  "%s %s: the panel runs to the very edge of the screen"
+                  % (pid, lock["device"]))
 
             shown = [a for a, _ in collector.atom_ids]
             check(len(set(shown)) == len(shown),

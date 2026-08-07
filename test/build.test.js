@@ -242,6 +242,18 @@ test('a broken palette fails the build rather than shipping', () => {
   }
 });
 
+test('the published floors have the values the README and the page state', () => {
+  // These three numbers are the project's public claim. docs/index.html prints them, the
+  // README justifies them, and every legibility statement rests on them. Pinning them here
+  // means relaxing a floor is a test failure and a deliberate act, rather than a one character
+  // edit that quietly weakens every check downstream.
+  assert.equal(LEGIBILITY.minPt, 8.0);
+  assert.equal(LEGIBILITY.minXHeightMm, 1.40);
+  assert.equal(CONTRAST.min, 12.0);
+  assert.equal(CARD_WIDTH_MM, 85.60);
+  assert.equal(CARD_HEIGHT_MM, 53.98);
+});
+
 test('the report carries the thresholds it judged against', () => {
   const { report } = buildAll(examplePeople(), { sourceSha256: 'abc' });
   assert.equal(report.thresholds.cardWidthMm, 85.60);

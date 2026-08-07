@@ -1,0 +1,59 @@
+name: Publish the example page
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Deliberately NOT `group: pages`.
+#
+# A shared `pages` group means one wedged run holds the lock and every later deploy queues
+# behind it, and a wedged run cannot always be cancelled from the UI. Keying the group on the
+# run id gives every run its own lock, so a stuck run blocks nothing but itself.
+concurrency:
+  group: pages-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # The published page shows real rendered cards, so the one thing that must be true of it
+      # is that it was built from the committed fictional example and from nothing else. This
+      # rebuilds it and diffs. A page built from a real people.json fails here rather than
+      # reaching the open web.
+      - name: The page must be what people.example.json produces
+        run: node scripts/build_docs.js --check
+
+      - name: Unit tests
+        run: node --test 'test/*.test.js'
+
+      - name: Privacy scan
+        run: python3 scripts/privacy_scan.py
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
