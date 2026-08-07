@@ -31,7 +31,7 @@ if [ -t 1 ]; then RED=$'\033[31m'; GREEN=$'\033[32m'; DIM=$'\033[2m'; OFF=$'\033
 STEPS_RUN=0
 STEPS_FAILED=0
 FAILED_NAMES=()
-START_TIME=$SECONDS
+START_TIME=$(date +%s)
 
 WORK="$(mktemp -d -t emcard-verify-XXXXXX)"
 trap 'rm -rf "$WORK"' EXIT
@@ -41,15 +41,24 @@ banner() {
 }
 
 # Run one step. Its exit code is the result, and there is no way to report success without it.
+#
+# The status is captured on the line after the command and nowhere else. Two shapes that look
+# correct and are not, both of which this script shipped with before step_selftest caught them:
+#
+#   local code=$?            records the status of `local`, which is always 0
+#   if cmd; then ... fi      leaves $? as the status of the `if` statement, and an `if` whose
+#   code=$?                  condition failed with no else branch exits 0
 step() {
   local name="$1"; shift
+  local code
   STEPS_RUN=$((STEPS_RUN + 1))
   banner "$name"
-  if "$@"; then
+  "$@"
+  code=$?
+  if [ "$code" -eq 0 ]; then
     printf '%sPASS%s %s\n' "$GREEN" "$OFF" "$name"
     return 0
   fi
-  local code=$?
   printf '%sFAIL%s %s (exit %d)\n' "$RED" "$OFF" "$name" "$code"
   STEPS_FAILED=$((STEPS_FAILED + 1))
   FAILED_NAMES+=("$name")
@@ -68,6 +77,39 @@ require() {
 }
 
 # ------------------------------------------------------------------------------------------
+# Does the machinery above actually report a failure?
+#
+# This exists because the first run of this script printed "FAIL prerequisites (exit 0)" for a
+# genuinely failing step, and a harness that mangles the exit code it reports is one edit away
+# from swallowing it. Run in a subshell so the counters it moves do not leak into the real run.
+step_selftest() {
+  local ok=0
+  if ( step "deliberately failing step" false >/dev/null 2>&1 ); then
+    printf '  %sa step that returns 1 was reported as passing%s\n' "$RED" "$OFF"
+    ok=1
+  else
+    printf '  a failing step returns nonzero from step()\n'
+  fi
+  if ( step "deliberately passing step" true >/dev/null 2>&1 ); then
+    printf '  a passing step returns zero from step()\n'
+  else
+    printf '  %sa step that returns 0 was reported as failing%s\n' "$RED" "$OFF"
+    ok=1
+  fi
+  # And the recorded exit code is the command's, not the shell builtin's. The digit class is
+  # [0-9][0-9]* rather than [0-9]*, because [0-9]* also matches zero digits and the step name
+  # itself contains the word this greps for.
+  local seen
+  seen=$( step "status fidelity" bash -c 'exit 7' 2>&1 | grep -o 'exit [0-9][0-9]*' | head -1 )
+  if [ "$seen" = "exit 7" ]; then
+    printf '  the reported exit code is the step command exit code\n'
+  else
+    printf '  %sa step exiting 7 was reported as %s%s\n' "$RED" "${seen:-nothing}" "$OFF"
+    ok=1
+  fi
+  return $ok
+}
+
 step_preflight() {
   local ok=0
   require "node" "the tool is written in Node and nothing here runs without it" \
@@ -96,7 +138,11 @@ step_preflight() {
     ok=1
   fi
 
-  if fc-list 2>/dev/null | grep -qi 'DejaVuSans\.ttf'; then
+  # Not `fc-list | grep -q`. With pipefail set, grep -q exits on the first match and closes the
+  # pipe, fc-list dies of SIGPIPE with status 141, and the pipeline reports failure for a font
+  # that is installed. The first run of this script failed its own prerequisites that way.
+  if fc-list > "$WORK/fonts.txt" 2>/dev/null \
+    && grep -qi 'DejaVuSans\.ttf' "$WORK/fonts.txt"; then
     printf '  present: DejaVu Sans\n'
   else
     printf '  %sMISSING: DejaVu Sans%s\n' "$RED" "$OFF"
@@ -157,11 +203,12 @@ step_netblock_control() {
 
 step_offline() {
   local out="$WORK/dist-netblocked"
+  local code
   rm -rf "$out"
   printf '  building with every outbound primitive replaced by something that throws\n'
   EMCARD_NETBLOCK_REPORT=1 node --require ./scripts/netblock.cjs \
     bin/emcard.js build --out "$out" > "$WORK/offline.log" 2>&1
-  local code=$?
+  code=$?
   if [ $code -ne 0 ]; then
     printf '  %sthe build failed under the netblock (exit %d), which means it tried to reach '\
 'the network%s\n' "$RED" "$code" "$OFF"
@@ -234,6 +281,7 @@ if [ "$(wc -l < "$WORK/tree-before.txt")" -lt 10 ]; then
   exit 1
 fi
 
+step "this script reports failures"        step_selftest || true
 step "prerequisites"                       step_preflight || true
 step "unit tests"                          step_unit || true
 step "build the example"                   step_build || true
@@ -249,7 +297,7 @@ step "sabotage harness"                    step_sabotage || true
 step "fingerprint"                         step_fingerprint || true
 step "the run did not modify the tree"     step_tree_untouched || true
 
-ELAPSED=$((SECONDS - START_TIME))
+ELAPSED=$(( $(date +%s) - START_TIME ))
 printf '\n%s================================================%s\n' "$DIM" "$OFF"
 if [ "$STEPS_FAILED" -eq 0 ]; then
   printf '%sVERIFY PASSED%s: %d of %d steps, %d seconds\n' \

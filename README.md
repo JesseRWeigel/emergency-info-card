@@ -230,14 +230,27 @@ absent, because an absent blood type is safer than a guessed one.
 
 ## Status
 
-Verified on 2026-08-07. `bash scripts/verify.sh` **exit code 0**, all 14 steps passed.
+Verified on 2026-08-07 on Linux 6.6 (WSL2), Node v24.13.0, Python 3.12.3, Google Chrome from
+/usr/bin/google-chrome, DejaVu Sans 2.37.
+
+`bash scripts/verify.sh` **exit code 0**, 15 of 15 steps.
+
+Pasted below verbatim. Two blocks are elided and both are marked in place: the 69 individual
+unit test lines, and the 25 per-sabotage detail paragraphs that repeat the summary table
+above them. Nothing else is edited.
 
 ```
 emergency-info-card, full verification
-2026-08-07T08:47:33Z
+2026-08-07T12:10:51Z
 
 === tree digest, before ===
   34 tracked files digested
+
+=== this script reports failures ===
+  a failing step returns nonzero from step()
+  a passing step returns zero from step()
+  the reported exit code is the step command exit code
+PASS this script reports failures
 
 === prerequisites ===
   present: node
@@ -248,10 +261,15 @@ emergency-info-card, full verification
 PASS prerequisites
 
 === unit tests ===
+[69 individual test lines elided]
 ℹ tests 69
 ℹ suites 0
 ℹ pass 69
 ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 120.963529
 PASS unit tests
 
 === build the example ===
@@ -264,10 +282,26 @@ smallest type: 8 pt (floor 8 pt), lowest contrast: 12.922:1 (floor 12:1)
   juniper: 10 facts on 2 card(s), 4 side(s); lock screen iphone-15-pro 8 shown 2 deferred, galaxy-s23 8 shown 2 deferred, iphone-se-3 6 shown 4 deferred
   marguerite: 5 facts on 2 card(s), 4 side(s), 1 long entry split across sides; lock screen iphone-15-pro 4 shown 1 deferred, galaxy-s23 4 shown 1 deferred, iphone-se-3 4 shown 1 deferred
 wrote 21 file(s) under dist
+lock-screen PNGs are not written by build. Run: emcard shoot
 OK: every run of text clears the point, x-height, contrast and fit floors.
 PASS build the example
 
 === netblock positive control ===
+  blocked  net.connect  (ENETBLOCK: NETBLOCK: net.connect was called. emergency-info-card must n)
+  blocked  net.createConnection  (ENETBLOCK: NETBLOCK: net.createConnection was called. emergency-info-ca)
+  blocked  new net.Socket().connect  (ENETBLOCK: NETBLOCK: net.Socket.connect was called. emergency-info-card)
+  blocked  tls.connect  (ENETBLOCK: NETBLOCK: tls.connect was called. emergency-info-card must n)
+  blocked  dgram.createSocket  (ENETBLOCK: NETBLOCK: dgram.createSocket was called. emergency-info-card)
+  blocked  dns.lookup  (ENETBLOCK: NETBLOCK: dns.lookup was called. emergency-info-card must no)
+  blocked  dns.resolve  (ENETBLOCK: NETBLOCK: dns.resolve was called. emergency-info-card must n)
+  blocked  dns.promises.lookup  (ENETBLOCK: NETBLOCK: dns.promises.lookup was called. emergency-info-car)
+  blocked  http.request  (ENETBLOCK: NETBLOCK: http.request was called. emergency-info-card must )
+  blocked  http.get  (ENETBLOCK: NETBLOCK: http.get was called. emergency-info-card must not )
+  blocked  https.request  (ENETBLOCK: NETBLOCK: https.request was called. emergency-info-card must)
+  blocked  fetch  (ENETBLOCK: NETBLOCK: fetch was called. emergency-info-card must not tou)
+  blocked  child_process.execSync  (ENETBLOCK: NETBLOCK: child_process.execSync was called. emergency-info-)
+  blocked  child_process.spawnSync  (ENETBLOCK: NETBLOCK: child_process.spawnSync was called. emergency-info)
+
 NETBLOCK POSITIVE CONTROL PASSED: all 14 outbound primitives throw ENETBLOCK
 PASS netblock positive control
 
@@ -279,6 +313,21 @@ PASS build with the network taken away
 
 === lock-screen PNGs at device size ===
 browser furniture: 0 x 87 CSS px of window that is not viewport
+  wren iphone-15-pro 1179x2556 (cropped from 1179x2817)
+  wren galaxy-s23 1080x2340 (cropped from 1080x2601)
+  wren iphone-se-3 750x1334 (cropped from 750x1508)
+  bartholomew iphone-15-pro 1179x2556 (cropped from 1179x2817)
+  bartholomew galaxy-s23 1080x2340 (cropped from 1080x2601)
+  bartholomew iphone-se-3 750x1334 (cropped from 750x1508)
+  kip iphone-15-pro 1179x2556 (cropped from 1179x2817)
+  kip galaxy-s23 1080x2340 (cropped from 1080x2601)
+  kip iphone-se-3 750x1334 (cropped from 750x1508)
+  juniper iphone-15-pro 1179x2556 (cropped from 1179x2817)
+  juniper galaxy-s23 1080x2340 (cropped from 1080x2601)
+  juniper iphone-se-3 750x1334 (cropped from 750x1508)
+  marguerite iphone-15-pro 1179x2556 (cropped from 1179x2817)
+  marguerite galaxy-s23 1080x2340 (cropped from 1080x2601)
+  marguerite iphone-se-3 750x1334 (cropped from 750x1508)
 wrote 15 lock-screen PNG(s) at real device resolution
 PASS lock-screen PNGs at device size
 
@@ -304,7 +353,7 @@ PASS independent recomputation
 
 === privacy scan ===
   positive control: a planted credential was detected, so the scanner does read and does match
-  read 24 of 34 tracked files
+  read 34 of 34 tracked files
   .gitignore ignores people.json
   git check-ignore confirms people.json is ignored
   all 5 example people carry a fictional-name marker
@@ -316,17 +365,48 @@ docs/index.html is exactly what people.example.json produces
 PASS published page matches the example
 
 === README ===
+  180 lines of prose checked, 122 lines of fenced transcript skipped
+  the Status section holds a 4291 character transcript
 README CHECK PASSED
 PASS README
 
 === sabotage harness ===
 sabotage harness: 25 sabotages over 34 tracked files
-null control: an unmodified copy fingerprints identically
+null control: an unmodified copy fingerprints identically (1fde2e363c396fbf)
+  srgb-linear-segment                    caught by unit, independent
+  srgb-flare-offset                      caught by unit, independent
+  srgb-channel-weights                   caught by unit, independent
+  contrast-floor-lowered                 caught by unit
+  point-floor-lowered                    caught by unit
+  x-height-floor-lowered                 caught by unit
+  card-size-rounded                      caught by unit, independent
+  atom-dropped-when-it-does-not-fit      caught by build, unit, independent
+  pagination-disabled                    caught by build, unit
+  completeness-invariant-removed         caught by unit  (dormant, output unchanged)
+  overflow-check-removed                 caught by unit  (dormant, output unchanged)
+  split-atom-counted-twice               caught by build, unit
+  advance-width-understated              caught by independent
+  unknown-glyph-measured-as-zero         caught by unit  (dormant, output unchanged)
+  lock-screen-omission-note-removed      caught by independent
+  lock-screen-omission-miscounted        caught by independent
+  clock-reserve-removed                  caught by independent
+  html-escaping-neutered                 caught by unit  (dormant, output unchanged)
+  unparseable-colour-treated-as-black    caught by unit  (dormant, output unchanged)
+  blood-type-validation-removed          caught by unit  (dormant, output unchanged)
+  contacts-no-longer-required            caught by unit  (dormant, output unchanged)
+  people-json-no-longer-ignored          caught by privacy  (dormant, output unchanged)
+  example-person-no-longer-fictional     caught by privacy, docs
+  netblock-disarmed                      caught by netblock  (dormant, output unchanged)
+  docs-page-hand-edited                  caught by docs  (dormant, output unchanged)
+
+[25 'ok' detail blocks elided, one per sabotage]
+
 25 of 25 sabotages applied, moved the output as declared, and were caught
 SABOTAGE HARNESS PASSED
 PASS sabotage harness
 
 === fingerprint ===
+  fingerprint 6bcfec3a084f1b2afd7ab8b6284915dd over 36 files
   5 people, 9 cards, 215 card runs, 248 lock-screen runs, 0 findings
   smallest type 8 pt, lowest contrast 12.922:1
 PASS fingerprint
@@ -336,7 +416,7 @@ PASS fingerprint
 PASS the run did not modify the tree
 
 ================================================
-VERIFY PASSED: 14 of 14 steps
+VERIFY PASSED: 15 of 15 steps, 21 seconds
 ```
 
 ## Unfinished
