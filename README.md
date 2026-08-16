@@ -3,6 +3,8 @@
 A wallet card and a phone lock-screen image carrying the facts a first responder needs,
 regenerated for every family member from one local file.
 
+**[The generated cards →](https://jesserweigel.github.io/emergency-info-card/)**
+
 Catalog task: `HLTH-035`. One of a public catalog of build ideas:
 https://github.com/JesseRWeigel/722-things-to-build
 
